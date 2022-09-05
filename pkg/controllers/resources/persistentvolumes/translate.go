@@ -63,12 +63,21 @@ func (s *persistentVolumeSyncer) translateUpdateBackwards(ctx *synccontext.SyncC
 		// when the PVC gets deleted
 	} else {
 		// check if SC was created on virtual
+		ctx.Log.Infof("vPv: %+v", vPv)
 		storageClassPhysicalName := translateStorageClass(ctx.TargetNamespace, vPv.Spec.StorageClassName)
 		isStorageClassCreatedOnVirtual = equality.Semantic.DeepEqual(storageClassPhysicalName, translatedSpec.StorageClassName)
 
 		// check if claim was created on virtual
-		claimRefPhysicalName := translate.PhysicalName(vPv.Spec.ClaimRef.Name, vPv.Spec.ClaimRef.Namespace)
-		isClaimRefCreatedOnVirtual = equality.Semantic.DeepEqual(claimRefPhysicalName, translatedSpec.ClaimRef.Name)
+		claimRefPhysicalName := ""
+		if vPv.Spec.ClaimRef != nil {
+		  claimRefPhysicalName = translate.PhysicalName(vPv.Spec.ClaimRef.Name, vPv.Spec.ClaimRef.Namespace)
+	        }
+		ctx.Log.Infof("claimRefPhysicalName: %+v", claimRefPhysicalName)
+
+		if translatedSpec.ClaimRef != nil {
+		  isClaimRefCreatedOnVirtual = equality.Semantic.DeepEqual(claimRefPhysicalName, translatedSpec.ClaimRef.Name)
+	        }
+		ctx.Log.Infof("isClaimRefCreatedOnVirtual: %+v", isClaimRefCreatedOnVirtual)
 	}
 
 	// check storage class. Do not copy the name, if it was created on virtual.
